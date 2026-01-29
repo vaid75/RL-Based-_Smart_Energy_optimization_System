@@ -66,14 +66,14 @@ The agent improves decisions over time using Reinforcement Learning algorithms l
 
 ## 📂 Project Structure
 📂 Project Structure RL-Smart-Energy/
-│ ├── environment.py # Smart energy simulation environment 
+├── environment.py # Smart energy simulation environment 
 ├── agent.py # RL agent (Q-learning / DQN) 
 ├── train.py # Training loop
 ├── evaluate.py # Performance evaluation 
 ├── utils.py # Helper functions 
 ├── data/ # Input data (energy patterns, prices)
 ├── models/ # Saved trained models 
-└── README.md
+└── READme.md
 
 ## 🔄 RL Energy Optimization Pipeline
 

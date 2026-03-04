@@ -3,32 +3,41 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# Hyperparameters
+# -----------------------------
+# Basic Hyperparameters
+# -----------------------------
 BATCH_SIZE = 32
-LR = 0.001
-GAMMA = 0.9
-MEMORY_CAPACITY = 2000
+LEARNING_RATE = 0.001
+GAMMA = 0.9              # reward discount factor
+MEMORY_SIZE = 2000      # replay buffer size
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # -----------------------------
-# Neural Network for Q-values
+# Neural Network Model
+# This network predicts Q-values
+# for each possible action
 # -----------------------------
 class Net(nn.Module):
 
-    def __init__(self, n_states, n_actions):
+    def __init__(self, state_size, action_size):
+
         super(Net, self).__init__()
 
-        self.fc1 = nn.Linear(n_states, 16)
+        # simple feedforward network
+        self.fc1 = nn.Linear(state_size, 16)
         self.fc2 = nn.Linear(16, 16)
-        self.out = nn.Linear(16, n_actions)
+        self.output = nn.Linear(16, action_size)
 
     def forward(self, x):
 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        return self.out(x)
+
+        q_values = self.output(x)
+
+        return q_values
 
 
 # -----------------------------
@@ -36,74 +45,89 @@ class Net(nn.Module):
 # -----------------------------
 class DQN:
 
-    def __init__(self, n_states, n_actions):
+    def __init__(self, state_size, action_size):
 
-        self.n_states = n_states
-        self.n_actions = n_actions
+        self.state_size = state_size
+        self.action_size = action_size
 
-        self.eval_net = Net(n_states, n_actions).to(device)
-        self.target_net = Net(n_states, n_actions).to(device)
+        # main network and target network
+        self.eval_net = Net(state_size, action_size).to(device)
+        self.target_net = Net(state_size, action_size).to(device)
 
-        self.memory = np.zeros((MEMORY_CAPACITY, n_states * 2 + 2))
+        # replay memory
+        self.memory = np.zeros((MEMORY_SIZE, state_size * 2 + 2))
         self.memory_counter = 0
 
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
-        self.loss_func = nn.MSELoss()
+        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LEARNING_RATE)
+        self.loss_function = nn.MSELoss()
 
 
     # -----------------------------
-    # Choose action
+    # Action selection (epsilon-greedy)
     # -----------------------------
     def choose_action(self, state, epsilon):
 
-        state = torch.FloatTensor(state).unsqueeze(0).to(device)
+        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(device)
 
+        # exploration vs exploitation
         if np.random.rand() > epsilon:
 
-            actions = self.eval_net(state)
-            action = torch.argmax(actions).item()
+            q_values = self.eval_net(state_tensor)
+
+            # choose action with highest Q value
+            action_index = torch.argmax(q_values)
+
+            action = action_index.item()
 
         else:
-
-            action = np.random.randint(0, self.n_actions)
+            # random action for exploration
+            action = np.random.randint(0, self.action_size)
 
         return action
 
 
     # -----------------------------
-    # Store experience
+    # Store experience in memory
+    # (state, action, reward, next_state)
     # -----------------------------
-    def store_transition(self, s, a, r, s_):
+    def store_transition(self, state, action, reward, next_state):
 
-        transition = np.hstack((s, [a, r], s_))
+        transition = np.hstack((state, [action, reward], next_state))
 
-        index = self.memory_counter % MEMORY_CAPACITY
+        index = self.memory_counter % MEMORY_SIZE
+
         self.memory[index] = transition
 
         self.memory_counter += 1
 
 
     # -----------------------------
-    # Train network
+    # Train the neural network
     # -----------------------------
     def learn(self):
 
-        sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
+        # sample random batch from memory
+        sample_index = np.random.choice(MEMORY_SIZE, BATCH_SIZE)
 
         batch = self.memory[sample_index]
 
-        b_s = torch.FloatTensor(batch[:, :self.n_states]).to(device)
-        b_a = torch.LongTensor(batch[:, self.n_states:self.n_states+1].astype(int)).to(device)
-        b_r = torch.FloatTensor(batch[:, self.n_states+1:self.n_states+2]).to(device)
-        b_s_ = torch.FloatTensor(batch[:, -self.n_states:]).to(device)
+        states = torch.FloatTensor(batch[:, :self.state_size]).to(device)
+        actions = torch.LongTensor(batch[:, self.state_size:self.state_size+1].astype(int)).to(device)
+        rewards = torch.FloatTensor(batch[:, self.state_size+1:self.state_size+2]).to(device)
+        next_states = torch.FloatTensor(batch[:, -self.state_size:]).to(device)
 
-        q_eval = self.eval_net(b_s).gather(1, b_a)
-        q_next = self.target_net(b_s_).detach()
+        # predicted Q values
+        q_eval = self.eval_net(states).gather(1, actions)
 
-        q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE,1)
+        # target Q values
+        q_next = self.target_net(next_states).detach()
 
-        loss = self.loss_func(q_eval, q_target)
+        q_target = rewards + GAMMA * q_next.max(1)[0].view(BATCH_SIZE,1)
 
+        # compute loss
+        loss = self.loss_function(q_eval, q_target)
+
+        # update neural network
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

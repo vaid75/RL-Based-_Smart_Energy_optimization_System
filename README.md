@@ -1,140 +1,146 @@
-# SMART HOME ENERGY TRADING WITH DRL
-This python library storest code for a conference paper about smart home energy management using Deep Reinforcement Learning. It is possible for the user to train their own DRL agent, as well as load pre-trained models and test the agent's performance.
+# ⚡ VoltXChange: Smart Home Energy Trading with DRL
 
-## Installation
-To begin using the code, just clone the repository:
-```git clone https://github.com/sensorlab/smart-home-energy-trading-with-DRL.git```
+**VoltXChange** is an advanced, AI-powered energy management simulation and web application. Built upon a foundation of Deep Reinforcement Learning (DRL), it optimizes smart home energy usage by autonomously managing a home battery system. 
 
-## Dependencies
-The project requires the following libraries to be installed:
-```
-pip install tqdm
-pip install torch torchvision
-pip install matplotlib
-pip install numpy
-pip install pandas
-```
+The agent learns to hoard locally generated solar power, discharge during peak grid pricing, and even sell excess energy back to the grid for profit (Net Metering), all visualized through a sleek, real-time dashboard.
 
-## Usage
-To use the functionalities of this repository, we must first import the module into our own ```.py``` or ```.ipynb``` file:
-```
-import HEMS
-```
-### Training an agent
-The below code trains a new RL agent:
-```
-manager = HEMS.HEMS()
-manager.train()
-```
-The ```HEMS``` class has a few parameters:
-- ```load```(default = False): tells the object to initialize from a pre-trained network
-- ```path``` (default = None): path to directory from where to load if ```load = True```
-- ```battery``` (default = 20): maximum battery capacity in kWh
-- ```max_en``` (default = 1.5): maximum energy in kWh that can be charged or discharged from the battery in a single step (in our case in a 15 min window)
-- ```eff``` (default = 0.9): input / output battery efficiency
-- ```price_coefs``` (default = [2,1]): price coefficients. They specifiy by how much the market price from the dataset should be multiplied to get buying and selling price of energy. This is an artificial way to introduce Distribution System Operator charges.
-- ```n_days``` (default = 2): number of past days that will be stored in the environment state
-- ```data_path``` (default = 'data/rtp.csv'): specifies the dataset with which pricing model to use
-#### Optional parameters for ```manager.train()``` function:
-- ```a``` (default = 3): weight parameter for reward function
-- ```b``` (default = 3): weight parameter for reward function
-- ```n_episodes``` (default = 200): number of training episodes
-- ```epsilon_reduce``` (default = 0.98): factor by which the exploration rate (epsilon) is reduced after each episode
-- ```n_days``` (default = 2): number of past days that will be stored in the environment state
-- ```n_steps``` (dafault = 7 * 24 * 4): number of steps to take each episode (the default is equal to one week)
+---
 
-### Saving
-The following code saves the manager to a directory called ```'my_net'```:
-```
-manager.save('saved_nets/my_net')
+## 🎯 Project Objectives
+
+1. **Minimize Grid Dependency:** Maximize the utilization of locally generated renewable energy (Solar).
+2. **Cost Optimization:** Exploit dynamic electricity market pricing (buy low, sell high).
+3. **Autonomous Trading:** Utilize a Deep Q-Network (DQN) to discover the most profitable battery charging/discharging policies without human intervention.
+4. **Real-time Analytics:** Provide a visually stunning web interface to monitor grid costs, solar battery charge, cost savings, and energy exports.
+
+---
+
+## 🧠 System Architecture & Workflow
+
+The system relies on a custom-built RL environment where the Agent observes real-time energy demands and market prices, deciding whether to **Charge**, **Discharge**, or remain **Idle**.
+
+```mermaid
+graph TD
+    %% Entities
+    Solar[☀️ Solar Panels]
+    Grid[⚡ Main Grid]
+    Home[🏠 Home Consumption]
+    Battery[🔋 Home Battery]
+    Agent{🧠 DRL Agent}
+    Dash[💻 VoltXChange Dashboard]
+
+    %% Energy Flow
+    Solar -->|Generates| Battery
+    Solar -->|Powers| Home
+    Battery -->|Discharges| Home
+    Battery -->|Sells Excess| Grid
+    Grid -->|Supplies Deficit| Home
+
+    %% Logic Flow
+    Grid -.->|Dynamic Prices| Agent
+    Solar -.->|Generation Data| Agent
+    Home -.->|Load Data| Agent
+    
+    Agent ==>|Action: Charge/Discharge| Battery
+    Agent ==>|Streams Live Metrics| Dash
 ```
 
-### Loading from a saved directory
-To load a pre-trained model, we must create a new manager with the ```load``` parameter set to ```True```:
-```
-manager = HEMS.HEMS(load=True, path='saved_nets/my_net')
+---
+
+## 🚀 Installation & Local Setup
+
+Clone the repository to your local machine:
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+cd YOUR_REPO_NAME
 ```
 
-### Testing
+### Dependencies
+This project requires Python 3. Install the required packages via `pip`:
+```bash
+pip install -r requirements.txt
 ```
-manager.test()
+
+### Running the App Locally
+Start the Flask web server:
+```bash
+python app.py
 ```
-Due to the unstable nature of the DQN algorithm, meaningful trainig results can sometimes only be achieved by significantly increasing the number of episodes or training the agent over and over (>10 times) until results are satisfactory. This is very computationally intensive and is also the reason why pre-trained managers are important for demonstrating the performance of the algorithm.
+* Open your browser and navigate to `http://127.0.0.1:5000`.
+* **Login Credentials**: Username: `admin` | Password: `123`
 
-## What happens under the hood
-This is a Deep Reinforcement Learning library for Smart Home Energy Management. In RL, we usually need to define a RL **ENVIRONMENT** on which a RL **AGENT** is trained. That is why the ```HEMS``` class initialises an ```Env``` class from ```env.py``` (the environment) and a ```DQN``` class from ```dqn.py``` (the agent - in this case the agent is defined as an algorithm called DQN). If ```load == False``` the environment and agent are initilaised inside the ```train()``` function. If ```load == True``` the environment and agent are loaded from the saved folder.
+---
 
-## Using ```env.py``` independently
-```env.py``` defines the RL environment for this particular problem. It follows the prinicple of an environment definition in the RL library 'gymnasium'.
-### Env
-To initialise the environment, we call the class ```Env```. It has the following paramenters:
-- ```df``` pandas datadrame from which the environment will be sourced
-- ```full_battery_capacity``` (default = 20) 
-- ```max_energy``` (default = 1.5)
-- ```eff``` (default = 0.9)
-- ```price_coefs``` (default = [2,1])
-- ```n_days``` (default = 2) number of days from which the environment will store the data
-- ```n_steps``` (default = 1000) length of episode
-- ```test``` (default = False) if set to ```False```, it will initialise the environment at a random index in ```df```, considering ```n_steps``` as the length of an episode. If set to ```True```, it will initialise the environment at index ```low``` and expect to end the episode at ```high```
-- ```low``` (default = 0) index in ```df``` at which the episode will begin if ```test == True```
-- ```high``` (default = 30000) index in ```df``` at which the episode will end if ```test == True```
+## ☁️ Deployment (Render)
 
-### Functions
-- ```reset(seed)``` resets the environment with seeded randomness if ```test == False```, otherwise it begins at ```low```
-- ```next_observation()``` returns the most recent step
-- ```next_observation_normalized()``` returns normalised values of the most recent step (used for feeding into neural net)
-- ```step(action)``` takes a step with action ```action``` and returns the next step, reward from the transition and whether the episode is to be terminated. Additionally it returns data about how much energy was exchanged between entities in the system
-  
+This project is fully configured to be deployed on [Render.com](https://render.com) for free.
+1. Create a new **Web Service** on Render.
+2. Connect this GitHub repository.
+3. Render will automatically detect the `requirements.txt` and `Procfile`.
+4. Render will start the application using `gunicorn app:app`.
+5. Your SQLite database is automatically generated upon the first successful deployment!
 
-## FOLDER STRUCTURE
-```
-project
-│   README.md
-|   dqn.py
-|   env.py
-|   HEMS.py
+---
+
+## ⚙️ How It Works Under the Hood
+
+### 1. The Environment (`env.py`)
+Built similarly to Gymnasium environments, it defines the physics of the smart home. 
+* Enforces solar-only charging.
+* Calculates uncapped grid usage (allowing for negative usage/profit when selling back to the grid).
+* Employs **extreme reward shaping** to ensure the DQN agent learns profitable actions in as few as 5 training episodes.
+
+### 2. The Agent (`dqn.py` & `HEMS.py`)
+A Deep Q-Network algorithm that stores transition states and updates neural weights to maximize long-term rewards. The `HEMS.py` manager orchestrates the interaction between the environment and the DQN agent.
+
+### 3. The Dashboard (`app.py` & `index.html`)
+A Flask API backend paired with a modern Tailwind CSS + Chart.js frontend. It exposes endpoints to trigger training iterations and run live tests, updating the UI dynamically.
+
+---
+
+## 📁 Folder Structure
+
+```text
+VoltXChange/
 │
-└───data
-│   │   rtp.csv
-│   │   tou.csv
-│   |   tou2.csv
+├── app.py                  # Main Flask Web Server & API
+├── dqn.py                  # Deep Q-Network Architecture
+├── env.py                  # Reinforcement Learning Environment Physics
+├── HEMS.py                 # Simulation Manager (Train/Test Orchestration)
+├── requirements.txt        # Python Dependencies
+├── Procfile                # Render Deployment Config
+├── dqn_model.pth           # Saved pre-trained Neural Network Weights
 │
-└───saved_nets
-    │...  
+├── data/
+│   └── rtp.csv             # Historical Energy Pricing & Usage Dataset
+│
+├── static/
+│   └── script.js           # Frontend Logic & Chart.js rendering
+│
+└── templates/
+    ├── login.html          # Authentication UI
+    └── index.html          # Main Dashboard UI (Tailwind CSS)
 ```
 
-## Citation
-If you are using our datasets or scripts in your research, citation of the following paper would be greatly appreciated.
+---
+
+## 📜 Citation & Original Research
+
+This project builds upon the academic research on Smart Home Energy Management. If you use the underlying datasets or base RL scripts in your research, please cite the original paper:
 
 [Matic Pokorn, Mihael Mohorčič, Andrej Čampa, and Jernej Hribar (2023). Smart Home Energy Cost Minimisation Using Energy Trading with Deep Reinforcement Learning](https://dl.acm.org/doi/10.1145/3600100.3625684)
 
-```
+```bibtex
 @inproceedings{10.1145/3600100.3625684,
 author = {Pokorn, Matic and Mohor\v{c}i\v{c}, Mihael and \v{C}ampa, Andrej and Hribar, Jernej},
 title = {Smart Home Energy Cost Minimisation Using Energy Trading with Deep Reinforcement Learning},
 year = {2023},
-isbn = {9798400702303},
 publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
 url = {https://doi.org/10.1145/3600100.3625684},
 doi = {10.1145/3600100.3625684},
-abstract = {Dynamic pricing for electrical energy provision is recently being adopted in several countries. While it is primarily intended to help Distribution System Operators (DSOs) improve load balancing, it also provides an opportunity to smart homes equipped with power generation units such as photovoltaics (PV) and energy storage systems to take advantage of pricing changes and thus reduce overall costs. However, the latter case remains largely unexplored in the literature, as most research focuses on community-based optimisation or managing energy consumption by controlling smart home appliances. To address this gap, we propose a Deep Reinforcement Learning (DRL)-based approach to single house energy trading that can reduce energy costs in a smart home. We demonstrate in a simulated environment with two energy pricing schemes that our solution can minimise the total cost of energy provision. Moreover, we show that the learned energy trading approach leads to up to 47.66\% lower costs for end users compared to conventional rule-based approaches.},
 booktitle = {Proceedings of the 10th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation},
-pages = {361–365},
-numpages = {5},
-keywords = {Deep Reinforcement Learning, Energy Trading, HEMS},
-location = {Istanbul, Turkey},
-series = {BuildSys '23}
 }
 ```
 
-## Links
-SensorLab: https://sensorlab.ijs.si/
-
-## Licensing
-Copyright 2023 Matic Pokorn
-The code in this project is licensed under MIT license.
-
-## Acknowledgement
-The research leading to these results was supported in part by the HORIZON-MSCA-IF project TimeSmart No. 101063721, H2020 project BD4OPEM (grant
-agreement ID: 872525), and by the Slovenian Research Agency under the grant P2-0016.
+## 📄 License
+Copyright 2023 Matic Pokorn. The base algorithms in this project are licensed under the MIT license. Modified and expanded for web deployment and visual analytics.

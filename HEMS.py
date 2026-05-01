@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 class HEMS:
 
     def __init__(self, battery=20, max_en=1.5, eff=0.9,
-                 price_coefs=None, data_path='data/rtp.csv'):
+                 price_coefs=None, data_path='data/rtp.csv', load=False, path=None):
 
         self.memory_capacity = 2000
         self.agent = None
@@ -25,6 +25,16 @@ class HEMS:
 
         # Epsilon starts at 1.0 (full exploration) and decays toward 0.1
         self.epsilon = 1.0
+
+        if load and path:
+            dummy_env = env.Env(self.df, self.battery, self.max_en, self.eff, self.price_coefs, n_steps=10)
+            self.agent = dqn.DQN(dummy_env.n_features, dummy_env.n_actions)
+            try:
+                self.agent.load_model(path)
+                print(f"Successfully loaded pre-trained model from {path}")
+                self.epsilon = 0.1 # Model is trained, so we minimize random exploration
+            except Exception as e:
+                print(f"Could not load model from {path}. Starting fresh. Error: {e}")
 
         import threading
         self.training_lock = threading.Lock()

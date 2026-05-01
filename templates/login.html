@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Smart Energy</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { justify-content: center; align-items: center; }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 45px 35px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .login-title { font-size: 1.8rem; margin-bottom: 5px; }
+        .login-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 15px; }
+        .input-group input {
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0,229,255,0.1);
+        }
+        
+        .login-btn {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            font-size: 1.1rem;
+            padding: 15px;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(0,229,255,0.2);
+            width: 100%;
+        }
+        .login-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 25px rgba(0,229,255,0.5); transform: translateY(-2px); }
+        #msg { color: #ff4444; min-height: 20px; font-size: 0.9rem; }
+    </style>
+</head>
+
+<body class="login-bg">
+
+<div class="login-card glass-card">
+    <div>
+        <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
+        <h2 class="login-title">Energy AI</h2>
+        <p class="login-subtitle">Sign in to your smart dashboard</p>
+    </div>
+    
+    <div class="input-group">
+        <input id="username" type="text" placeholder="Username" autocomplete="username">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    
+    <button class="login-btn" onclick="login()">Enter Dashboard</button>
+    <p id="msg"></p>
+</div>
+
+<script>
+async function login() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+    let btn = document.querySelector(".login-btn");
+    
+    btn.innerText = "Authenticating...";
+
+    try {
+        let res = await fetch("/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username, password})
+        });
+
+        let data = await res.json();
+
+        if (data.status === "success") {
+            window.location.href = "/dashboard";
+        } else {
+            document.getElementById("msg").innerText = "Invalid credentials. Try again.";
+            btn.innerText = "Enter Dashboard";
+        }
+    } catch(e) {
+        document.getElementById("msg").innerText = "Connection error.";
+        btn.innerText = "Enter Dashboard";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VoltXChange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-sky { box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .glow-error { box-shadow: 0 0 20px rgba(255, 180, 171, 0.15); }
+        .liquid-smooth-transitions { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { background-color: #0F172A; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#fcdeb5",
+                        "on-primary-fixed": "#131b2e",
+                        "on-secondary-fixed": "#001e2c",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-container": "#1f1f21",
+                        "surface-container-highest": "#353436",
+                        "surface-tint": "#bec6e0",
+                        "surface-variant": "#353436",
+                        "surface-dim": "#131315",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "tertiary-fixed-dim": "#dec29a",
+                        "on-tertiary": "#3e2d11",
+                        "tertiary-container": "#231500",
+                        "outline": "#909097",
+                        "inverse-surface": "#e4e2e4",
+                        "on-secondary": "#00354a",
+                        "inverse-primary": "#565e74",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-primary": "#283044",
+                        "tertiary": "#dec29a",
+                        "on-secondary-container": "#00374d",
+                        "on-surface": "#e4e2e4",
+                        "primary": "#bec6e0",
+                        "surface-bright": "#39393b",
+                        "on-surface-variant": "#c6c6cd",
+                        "on-error": "#690005",
+                        "primary-fixed": "#dae2fd",
+                        "error-container": "#93000a",
+                        "secondary-container": "#00a6e0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "secondary-fixed": "#c4e7ff",
+                        "outline-variant": "#45464d",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface": "#131315",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-primary-container": "#798098",
+                        "inverse-on-surface": "#303032",
+                        "surface-container-low": "#1b1b1d",
+                        "background": "#131315",
+                        "on-tertiary-container": "#957d5a",
+                        "on-tertiary-fixed-variant": "#574425",
+                        "on-background": "#e4e2e4",
+                        "secondary": "#7bd0ff",
+                        "primary-container": "#0f172a",
+                        "on-tertiary-fixed": "#271901",
+                        "surface-container-high": "#2a2a2b"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "data-mono": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "1.0", "fontWeight": "700"}],
+                        "data-mono": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top: 3px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: none;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    button.loading .spinner { display: inline-block; }
+    button.loading .btn-text { opacity: 0.8; }
+    button.loading { pointer-events: none; opacity: 0.8; }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/10 shadow-[0_20px_40px_rgba(2,6,23,0.4)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-sky-400 text-2xl" data-icon="bolt">bolt</span>
+<div class="flex flex-col">
+<h1 class="text-xl font-bold tracking-widest text-white drop-shadow-[0_0_8px_rgba(56,189,248,0.5)] font-headline-md">VoltXChange</h1>
+<span id="status" class="text-[10px] uppercase tracking-[0.2em] text-secondary font-label-sm animate-pulse">Status: Ready</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<span class="text-sky-400 font-bold font-label-sm cursor-pointer transition-all duration-400 hover:scale-105">DASHBOARD</span>
+<span onclick="logout()" class="text-red-400 font-label-sm cursor-pointer transition-all duration-400 hover:scale-105 hover:text-red-500">LOGOUT</span>
+</nav>
+<div class="w-10 h-10 rounded-full border border-sky-500/30 p-0.5 overflow-hidden cursor-pointer active:scale-95 transition-transform">
+<img alt="User Profile" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9xXmEhw0AqJ6qByKaOa1koNVNYnW0SZxMV7peljHF-tNMUvheScNB6nFvS3jSWlMHbDwNAlq34_MdEVOsZOn7svVYzVV6gJdHnk4dn2_RsHuJlNA9TosFtJtA4aMQ6CplPblzL3mTWozSlDjGrl8zLzuiYUf55wGlgS1aAOGCd7OBbleFwFjJQgGs75lW6_VLrSLoqQK00NVZAQXOvWoxCjFFKSgjVulny_A4Zx45Lfw4adHwdV5WhM4J9KcxftRgU_f27RAtWV5l"/>
+</div>
+</div>
+</header>
+<!-- Sidebar (Navigation Drawer) -->
+<aside class="hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] w-72 z-40 bg-[#0F172A] border-r border-white/5 shadow-2xl">
+<div class="p-6 flex items-center gap-3 border-b border-white/5">
+<div class="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-sky-400" data-icon="grid_view">grid_view</span>
+</div>
+<div>
+<p class="text-sky-400 font-black font-headline-md text-sm">Neural Engine v2.4</p>
+<p class="text-slate-500 text-xs font-label-sm">Runtime: 142h</p>
+</div>
+</div>
+<nav class="flex-1 py-6 px-4 space-y-2">
+<div class="flex items-center gap-3 px-4 py-3 bg-sky-500/10 text-sky-400 border-r-2 border-sky-400 transition-transform duration-300">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-medium font-headline-md text-sm">Grid Overview</span>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-24 lg:pl-80 px-6 max-w-[1600px] mx-auto min-h-screen">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<!-- KPI Section (2x2 Grid) -->
+<section class="xl:col-span-4 grid grid-cols-2 gap-4">
+<div class="glass-card p-6 rounded-xl glow-error border-error/20">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-error" data-icon="payments">payments</span>
+</div>
+<p class="text-slate-400 text-xs font-label-sm uppercase tracking-wider">Grid Cost</p>
+<h3 id="cost" class="text-2xl font-bold font-headline-md text-white mt-1">₹ --</h3>
+<p class="text-[10px] text-slate-500 mt-2 font-body-md leading-tight">Total amount spent on electricity from the main grid</p>
+</div>
+<div class="glass-card p-6 rounded-xl border-tertiary/20">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-tertiary" data-icon="battery_charging_90" data-weight="fill" style="font-variation-settings: 'FILL' 1;">battery_charging_90</span>
+<div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
+</div>
+<p class="text-slate-400 text-xs font-label-sm uppercase tracking-wider">Solar Battery</p>
+<h3 class="text-2xl font-bold font-headline-md text-white mt-1"><span id="solar_charge">--</span> <span class="text-sm font-normal opacity-60">kWh</span></h3>
+<p class="text-[10px] text-slate-500 mt-2 font-body-md leading-tight">Total solar energy successfully stored in the battery</p>
+</div>
+<div class="glass-card p-6 rounded-xl border-secondary/20 glow-sky">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="trending_up">trending_up</span>
+</div>
+<p class="text-slate-400 text-xs font-label-sm uppercase tracking-wider">Cost Savings</p>
+<h3 id="savings" class="text-2xl font-bold font-headline-md text-secondary mt-1">--%</h3>
+<p class="text-[10px] text-slate-500 mt-2 font-body-md leading-tight">Percentage of money saved vs baseline grid home</p>
+</div>
+<div class="glass-card p-6 rounded-xl border-sky-400/20">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-sky-400" data-icon="electric_bolt">electric_bolt</span>
+</div>
+<p class="text-slate-400 text-xs font-label-sm uppercase tracking-wider">Energy Sold</p>
+<h3 class="text-2xl font-bold font-headline-md text-white mt-1"><span id="sold_energy">--</span> <span class="text-sm font-normal opacity-60">kWh</span></h3>
+<p class="text-[10px] text-slate-500 mt-2 font-body-md leading-tight">Excess solar/battery energy sold to grid for profit</p>
+</div>
+</section>
+<!-- Live Analytics Section -->
+<section class="xl:col-span-8 flex flex-col gap-6">
+<div class="glass-card p-6 rounded-2xl h-full flex flex-col">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h2 class="text-lg font-bold font-headline-md text-white">Learning Efficiency</h2>
+<p class="text-xs text-slate-400 font-body-md">Model Convergence over Training Episodes</p>
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 text-[10px] font-bold border border-sky-500/20">LIVE DATA</span>
+</div>
+</div>
+<div class="relative flex-1 min-h-[240px] w-full mt-auto flex items-end justify-between px-2 overflow-hidden">
+    <canvas id="trainChart"></canvas>
+</div>
+</div>
+</section>
+
+<!-- Additional Energy Performance Chart Section -->
+<section class="xl:col-span-12 flex flex-col gap-6">
+<div class="glass-card p-6 rounded-2xl h-full flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<div>
+<h2 class="text-lg font-bold font-headline-md text-white">Energy Performance Details</h2>
+<p class="text-xs text-slate-400 font-body-md">Grid usage, prices, and battery levels over simulation steps</p>
+</div>
+</div>
+<div class="relative flex-1 min-h-[240px] w-full mt-auto flex items-end justify-between px-2 overflow-hidden">
+    <canvas id="chart"></canvas>
+</div>
+</div>
+</section>
+
+<!-- Command Center -->
+<section class="xl:col-span-12">
+<div class="glass-card p-8 rounded-3xl border-white/5 flex flex-col h-full">
+<h2 class="text-xl font-bold font-headline-md text-white mb-8 flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-400" data-icon="terminal">terminal</span>
+                        Command Center
+                    </h2>
+<div class="flex-1 flex flex-col justify-center max-w-xl mx-auto w-full gap-10">
+<!-- Max Episodes Slider -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-widest font-label-sm">Max Training Episodes</label>
+<span id="episodes-display" class="text-2xl font-bold text-white font-data-mono">20</span>
+</div>
+<input id="episodes" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-secondary transition-all" max="100" min="5" step="1" type="range" value="20" oninput="document.getElementById('episodes-display').innerText = this.value"/>
+<div class="flex justify-between text-[10px] text-slate-600 font-data-mono uppercase">
+<span>Low Latency</span>
+<span>Deep Learning</span>
+</div>
+</div>
+
+<!-- Simulation Steps Slider -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-widest font-label-sm">Simulation Steps</label>
+<span id="steps-display" class="text-2xl font-bold text-white font-data-mono">100</span>
+</div>
+<input id="steps" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-secondary transition-all" max="500" min="50" step="10" type="range" value="100" oninput="document.getElementById('steps-display').innerText = this.value"/>
+</div>
+
+<!-- Action Controls -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<button id="btnTrain" onclick="train()" class="col-span-1 md:col-span-2 group relative overflow-hidden bg-gradient-to-r from-sky-600 to-sky-400 p-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-400 hover:scale-[1.02] active:scale-95 shadow-[0_10px_30px_rgba(56,189,248,0.3)]">
+<div class="spinner"></div>
+<span class="material-symbols-outlined text-white btn-text" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="text-white font-bold font-headline-md uppercase tracking-wider btn-text">Start Optimization Engine</span>
+<div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
+</button>
+<button id="btnTest" onclick="test()" class="col-span-1 md:col-span-2 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center gap-3 transition-all font-label-sm text-slate-300 hover:text-white uppercase tracking-wider">
+<div class="spinner"></div>
+<span class="material-symbols-outlined text-sm btn-text" data-icon="settings_backup_restore">settings_backup_restore</span>
+<span class="btn-text">Run Simulation</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script src="/static/script.js"></script>
+</body></html>

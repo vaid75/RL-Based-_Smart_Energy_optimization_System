@@ -4,7 +4,7 @@ let trainChart;
 async function train() {
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("btnTrain");
-    statusEl.innerText = "Training...";
+    statusEl.innerText = "Starting training...";
     btn.classList.add("loading");
 
     let episodes = document.getElementById("episodes").value;
@@ -20,18 +20,45 @@ async function train() {
         
         if (data.status === "error") {
             statusEl.innerText = "Error: " + data.message;
-        } else {
-            statusEl.innerText = data.status || "Training Completed";
-            if (data.savings_trend) {
-                renderTrainChart(data.savings_trend);
-            }
+            btn.classList.remove("loading");
+            return;
         }
+
+        statusEl.innerText = "Training in progress (this may take a few minutes)...";
+        pollTrainingStatus(btn, statusEl);
+
     } catch (error) {
         statusEl.innerText = "Network/JS Error: " + error.message;
         console.error(error);
-    } finally {
         btn.classList.remove("loading");
     }
+}
+
+function pollTrainingStatus(btn, statusEl) {
+    const interval = setInterval(async () => {
+        try {
+            let res = await fetch("/train_status");
+            let data = await res.json();
+
+            if (!data.is_training) {
+                clearInterval(interval);
+                btn.classList.remove("loading");
+                
+                if (data.error) {
+                    statusEl.innerText = "Error: " + data.error;
+                } else if (data.savings_trend) {
+                    statusEl.innerText = data.message || "Training Completed!";
+                    renderTrainChart(data.savings_trend);
+                } else {
+                    statusEl.innerText = data.message || "Training finished.";
+                }
+            } else {
+                statusEl.innerText = "Training in progress...";
+            }
+        } catch (err) {
+            console.error("Polling error:", err);
+        }
+    }, 2000);
 }
 
 
@@ -51,6 +78,12 @@ async function test() {
         });
 
         let data = await res.json();
+        
+        if (data.error) {
+            statusEl.innerText = "Error: " + data.error;
+            btn.classList.remove("loading");
+            return;
+        }
 
         document.getElementById("cost").innerText = "₹ " + data.cost;
         document.getElementById("solar_charge").innerText = data.solar_charge;
@@ -62,7 +95,7 @@ async function test() {
 
         statusEl.innerText = "Simulation completed!";
     } catch (error) {
-        statusEl.innerText = "Error during simulation";
+        statusEl.innerText = "Error during simulation: " + error.message;
     } finally {
         btn.classList.remove("loading");
     }

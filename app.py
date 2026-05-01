@@ -99,30 +99,66 @@ def logout():
     return redirect(url_for("login_page"))
 
 
+training_status = {
+    "is_training": False,
+    "error": None,
+    "savings_trend": None,
+    "message": ""
+}
+
 @app.route('/train', methods=['POST'])
 @login_required
 def train():
+    global training_status
+    if training_status["is_training"]:
+        return jsonify({"status": "error", "message": "Training is already in progress"})
+
     try:
         episodes = int(request.json.get("episodes", 20))
-        print("Training started for episodes:", episodes)
+        
+        training_status["is_training"] = True
+        training_status["error"] = None
+        training_status["savings_trend"] = None
+        training_status["message"] = "Training started..."
 
-        _, episode_savings = system.train(n_episodes=episodes)
+        def run_training():
+            global training_status
+            try:
+                print("Training started for episodes:", episodes)
+                _, episode_savings = system.train(n_episodes=episodes)
+                print("Training finished")
+                training_status["savings_trend"] = episode_savings
+                training_status["message"] = "Training completed"
+            except Exception as e:
+                import traceback
+                print("TRAIN ERROR:", traceback.format_exc())
+                training_status["error"] = str(e)
+                training_status["message"] = "Training failed"
+            finally:
+                training_status["is_training"] = False
 
-        print("Training finished")
-        return jsonify({
-            "status": "Training completed",
-            "savings_trend": episode_savings
-        })
-    
+        import threading
+        t = threading.Thread(target=run_training)
+        t.start()
+
+        return jsonify({"status": "started", "message": "Training started in background"})
+        
     except Exception as e:
-        print("TRAIN ERROR:", e)
+        print("TRAIN START ERROR:", e)
         return jsonify({"status": "error", "message": str(e)})
 
+@app.route('/train_status', methods=['GET'])
+@login_required
+def train_status_route():
+    return jsonify(training_status)
 
 
 @app.route('/test', methods=['POST'])
 @login_required
 def test():
+    if training_status.get("is_training"):
+        return jsonify({"error": "Training is currently in progress. Please wait until it finishes."})
+
     try:
         steps = int(request.json.get("steps", 200))
         steps = min(steps, 500)

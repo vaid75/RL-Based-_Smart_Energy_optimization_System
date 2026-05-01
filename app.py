@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.secret_key = "secret123"
 CORS(app)
 
-# Initialize system
-system = HEMS()
+# Initialize system with pre-trained model
+system = HEMS(load=True, path="dqn_model.pth")
 
 
 login_manager = LoginManager()

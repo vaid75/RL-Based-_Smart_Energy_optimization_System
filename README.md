@@ -1,5 +1,8 @@
 # ⚡ VoltXChange: Smart Home Energy Trading with DRL
 
+🌍 **Live Application:** [https://voltxchange-ag37.onrender.com](https://voltxchange-ag37.onrender.com)
+*(Login: `admin` / `123`)*
+
 **VoltXChange** is an advanced, AI-powered energy management simulation and web application. Built upon a foundation of Deep Reinforcement Learning (DRL), it optimizes smart home energy usage by autonomously managing a home battery system. 
 
 The agent learns to hoard locally generated solar power, discharge during peak grid pricing, and even sell excess energy back to the grid for profit (Net Metering), all visualized through a sleek, real-time dashboard.
